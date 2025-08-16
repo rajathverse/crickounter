@@ -1,0 +1,3308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crickounter - Hawkspire Cricket Club</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      /* Professional Color Palette */
+      --primary: #1e40af; /* Professional Blue */
+      --primary-light: #3b82f6;
+      --primary-dark: #1e3a8a;
+      --secondary: #0f172a; /* Slate 900 */
+      --accent: #10b981; /* Emerald 500 */
+      --accent-light: #34d399;
+      --surface: #ffffff;
+      --surface-secondary: #f8fafc;
+      --surface-tertiary: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-tertiary: #64748b;
+      --text-inverse: #ffffff;
+      --border: #e2e8f0;
+      --border-light: #f1f5f9;
+      --shadow: rgba(15, 23, 42, 0.08);
+      --shadow-md: rgba(15, 23, 42, 0.12);
+      --shadow-lg: rgba(15, 23, 42, 0.16);
+      --error: #dc2626;
+      --warning: #f59e0b;
+      --success: #059669;
+      --gradient-primary: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+      --gradient-success: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+      --gradient-danger: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f87171 100%);
+    }
+
+    [data-theme="dark"] {
+      --surface: #0f172a;
+      --surface-secondary: #1e293b;
+      --surface-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-tertiary: #94a3b8;
+      --border: #334155;
+      --border-light: #1e293b;
+      --shadow: rgba(0, 0, 0, 0.2);
+      --shadow-md: rgba(0, 0, 0, 0.3);
+      --shadow-lg: rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: all 0.3s ease;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 16px;
+      background: var(--surface);
+      min-height: 100vh;
+      box-shadow: 0 0 0 1px var(--border), 0 20px 40px rgba(0,0,0,0.1);
+      position: relative;
+      transition: all 0.3s ease;
+      border-radius: 0 0 24px 24px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient-primary);
+      z-index: 10;
+    }
+
+    .header {
+      text-align: center;
+      padding: 20px 0 24px;
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .header::before {
+      content: '🏏';
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      margin: 0 auto 16px;
+      box-shadow: 0 4px 12px var(--shadow);
+      object-fit: cover;
+    }
+
+    .title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 52px;
+      font-weight: 700;
+      background: var(--gradient-primary);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: -8px;
+      letter-spacing: -0.025em;
+      position: relative;
+      z-index: 1;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      from { filter: drop-shadow(0 0 5px rgba(30, 64, 175, 0.3)); }
+      to { filter: drop-shadow(0 0 15px rgba(30, 64, 175, 0.5)); }
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    /* Sound toggle and theme toggle container */
+    .controls-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .sound-toggle {
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+      padding: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+    }
+
+    .sound-toggle:hover {
+      color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    .sound-toggle:active {
+      transform: scale(0.95);
+    }
+
+    .fullscreen-toggle {
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+      padding: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+    }
+
+    .fullscreen-toggle:hover {
+      color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    .fullscreen-toggle:active {
+      transform: scale(0.95);
+    }
+
+    .overs-toggle {
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+      padding: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+    }
+
+    .overs-toggle:hover {
+      color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    .overs-toggle:active {
+      transform: scale(0.95);
+    }
+
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .theme-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .theme-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border);
+      transition: .3s;
+      border-radius: 20px;
+    }
+
+    .theme-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: var(--surface);
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .theme-slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .theme-slider:before {
+      transform: translateX(20px);
+    }
+
+    .theme-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    .scoreboard-section {
+      margin-bottom: 24px;
+    }
+
+    .scoreboard {
+      background: var(--gradient-primary);
+      color: var(--text-inverse);
+      padding: 24px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(30, 64, 175, 0.2), 0 0 0 1px rgba(255,255,255,0.1) inset;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+      min-height: 160px; /* Increased to accommodate target display content */
+    }
+
+    .scoreboard::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+      animation: shimmer 3s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .score-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 2;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+    .score-display.pulse {
+      animation: scorePulse 0.6s ease;
+    }
+
+    @keyframes scorePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .overs-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      opacity: 0.95;
+      position: relative;
+      z-index: 2;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .target-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0.9;
+      position: relative;
+      z-index: 2;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      margin-top: 4px;
+    }
+
+    /* Larger content for first innings - applied via JavaScript */
+    .scoreboard.first-innings .score-display {
+      font-size: 48px !important; /* Increased from 42px */
+      margin-bottom: 16px; /* More spacing */
+      line-height: 1.1;
+    }
+
+    .scoreboard.first-innings .overs-display {
+      font-size: 22px !important; /* Increased from 18px */
+      margin-top: 8px; /* More spacing */
+      font-weight: 600; /* Bolder text */
+    }
+
+    .controls {
+      margin-bottom: 24px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .button-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 52px;
+      height: 48px;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn:focus {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .btn.btn-animate {
+      animation: buttonPress 0.15s ease;
+    }
+
+    @keyframes buttonPress {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    .btn-primary {
+      background: var(--gradient-primary);
+      color: var(--text-inverse);
+      box-shadow: 0 4px 16px rgba(30, 64, 175, 0.2);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(30, 64, 175, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: var(--gradient-success);
+      color: var(--text-inverse);
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-success:hover {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: var(--gradient-danger);
+      color: var(--text-inverse);
+      box-shadow: 0 4px 16px rgba(220, 38, 38, 0.2);
+    }
+
+    .btn-danger:hover {
+      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-light);
+      border-color: var(--text-tertiary);
+    }
+
+    .toggle-controls {
+      text-align: center;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-toggle {
+      background: var(--surface-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      height: auto;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .btn-toggle:hover {
+      background: var(--surface-tertiary);
+      color: var(--text-primary);
+    }
+
+    /* Smaller height for specific buttons */
+    /* All buttons now use the same size (48px height) for consistency */
+
+    .timeline {
+      background: var(--surface-secondary);
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      margin-bottom: 24px;
+      text-align: center;
+      height: 153px; /* Reduced by 10% from 170px */
+      display: flex;
+      flex-direction: column;
+    }
+
+    .timeline-header {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 16px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 20px 12px;
+      flex-shrink: 0;
+      background: var(--surface-secondary);
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .timeline-header::before {
+      content: '📊';
+      font-size: 16px;
+    }
+
+    .timeline-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 20px 20px;
+    }
+
+    .timeline-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .timeline-content::-webkit-scrollbar-track {
+      background: var(--border-light);
+      border-radius: 2px;
+    }
+
+    .timeline-content::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .timeline-entry {
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      text-align: center;
+      position: relative;
+
+      /* Keep timeline entries big from the start */
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Make placeholder match entry size */
+    .timeline-placeholder {
+      padding: 12px 16px; /* Match timeline-entry exactly */
+      margin-bottom: 8px; /* Match timeline-entry exactly */
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      font-size: 13px;
+      transition: all 0.2s ease; /* Match timeline-entry exactly */
+      text-align: center;
+      position: relative;
+      /* Timeline entry dimensions - reduced by 10px total */
+      min-height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+
+    .timeline-entry:hover {
+      background: var(--surface-tertiary);
+      transform: translateX(2px);
+    }
+
+    .timeline-entry::before {
+      content: counter(over-counter);
+      counter-increment: over-counter;
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--primary);
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .timeline-entry .runs-circle,
+    .timeline-entry .wickets-circle {
+      position: absolute;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 10px;
+      right: -8px;
+    }
+
+    .timeline-entry .runs-circle {
+      background: #27ae60;
+      top: calc(50% - 22px);
+    }
+
+    .timeline-entry .wickets-circle {
+      background: #e74c3c;
+      top: calc(50% + 2px);
+    }
+
+    .timeline {
+      counter-reset: over-counter;
+    }
+
+    .over-header {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .ball-item {
+      display: inline-block;
+      margin: 2px 4px 2px 0;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .ball-item:hover {
+      transform: scale(1.05);
+    }
+
+    .ball-out {
+      background: rgba(220, 38, 38, 0.1);
+      color: var(--error);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+    }
+
+    .ball-dot {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .timeline-content {
+      min-height: 100px;
+    }
+
+    .timeline-placeholder {
+      text-align: center;
+      padding: 32px 0;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timeline-placeholder::before {
+      display: none;
+    }
+
+    .ball-message {
+      font-size: 17px; /* Decreased font size by 5 points */
+      padding: 1px 4px; /* Ultra minimal padding for very compact message box */
+      border-radius: 16px;
+      background: rgba(59, 130, 246, 0.08);
+      color: var(--primary);
+      border: 1.5px solid rgba(59, 130, 246, 0.18);
+      font-style: italic;
+      font-weight: 600;
+      box-shadow: 0 2px 8px 0 rgba(30,64,175,0.04);
+      cursor: default;
+      transform: none !important;
+    }
+
+    .ball-message {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      font-style: italic;
+      cursor: default;
+      transform: none !important;
+    }
+
+    .timeline-placeholder {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .timeline-placeholder::before {
+      display: none;
+    }
+
+    .ball-runs {
+      background: rgba(30, 64, 175, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(30, 64, 175, 0.2);
+    }
+
+    .ball-extra {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .footer {
+      border-top: 1px solid var(--border-light);
+      margin-top: auto;
+      background: var(--surface-secondary);
+      padding: 0;
+    }
+
+    .footer-content {
+      padding: 20px 0 16px;
+      text-align: center;
+    }
+
+    .footer-main {
+      margin-bottom: 8px;
+    }
+
+    .footer-text {
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 400;
+      font-style: italic;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      letter-spacing: 0.01em;
+      line-height: 1.5;
+      margin: 0;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .footer-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
+
+    .footer-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 4px;
+      right: 4px;
+      height: 1px;
+      background: var(--primary);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--primary-dark);
+      background: rgba(30, 64, 175, 0.05);
+      transform: translateY(-1px);
+    }
+
+    .footer-link:hover::after {
+      transform: scaleX(1);
+    }
+
+    /* Screen reader only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 12px;
+        border-radius: 0;
+        max-width: 100%;
+      }
+      
+      .title {
+        font-size: 47px;
+      }
+      
+      .score-display {
+        font-size: 32px;
+      }
+      
+      .btn {
+        height: 44px;
+        font-size: 13px;
+        min-width: 48px;
+      }
+      
+      /* All buttons use same size on mobile too for consistency */
+      
+      .button-group {
+        gap: 6px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+
+      .stat-card {
+        padding: 8px;
+      }
+
+      .stat-value {
+        font-size: 16px;
+      }
+
+      .stat-label {
+        font-size: 10px;
+      }
+    }
+
+    @media (hover: none) {
+      .btn:hover {
+        transform: none;
+      }
+      
+      .btn:hover::before {
+        left: -100%;
+      }
+    }
+
+    /* Modal for NoaBall/Wide run selection */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      max-width: 320px;
+      width: 90%;
+      text-align: center;
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+      from { transform: scale(0.9) translateY(-20px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    .modal-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+    
+    /* Enhanced styling for match result subtitle */
+    #matchResultSubtitle {
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      margin: 16px 0 24px 0;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .modal-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .modal-btn {
+      height: 44px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--primary);
+      color: white;
+    }
+
+    .modal-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .modal-btn:active {
+      transform: scale(0.95);
+    }
+
+    .modal-close {
+      background: var(--surface-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: var(--border-light);
+    }
+    .keyboard-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+      text-align: center;
+      white-space: pre-line;
+    }
+
+    .keyboard-hint.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">CRICKOUNTER</h1>
+      <div class="controls-toggle">
+        <div class="sound-toggle" onclick="toggleSound()" title="Toggle Sound">
+          <i class="fas fa-volume-up" id="soundIcon"></i>
+        </div>
+        <div class="theme-toggle">
+          <span class="theme-label">🌙</span>
+          <label class="theme-switch">
+            <input type="checkbox" onchange="toggleTheme()">
+            <span class="theme-slider"></span>
+          </label>
+          <span class="theme-label">☀️</span>
+        </div>
+        <div class="fullscreen-toggle" onclick="toggleFullscreen()" title="Toggle Fullscreen" id="fullscreenToggle">
+          <i class="fas fa-expand" id="fullscreenIcon"></i>
+        </div>
+        <div class="overs-toggle" onclick="showMatchSetup()" title="Match Overs">
+          <i class="fas fa-cog"></i>
+        </div>
+      </div>
+    </header>
+
+    <section class="scoreboard-section">
+      <div class="scoreboard">
+        <div class="score-display" aria-live="polite" id="scoreDisplay">
+          <span id="score">0</span>/<span id="wickets">0</span>
+        </div>
+        <div class="overs-display" aria-live="polite">
+          Overs: <span id="overs">0.0</span> | CRR: <span id="runRate">0.00</span>
+        </div>
+        <div class="target-display" aria-live="polite" id="targetDisplay" style="display: none;">
+          <div>Target: <span id="target">0</span> | RRR: <span id="requiredRate">0.00</span></div>
+          <div style="margin-top: 2px;">Need: <span id="runsNeeded">0</span> in <span id="oversLeft">0.0</span> overs</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="timeline" aria-live="polite" id="timeline">
+      <h2 class="timeline-header">TIMELINE</h2>
+      <div class="timeline-content" id="timelineContent">
+        <div id="timelineLog"></div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <div class="button-group">
+        <button onclick="addRun(0)" class="btn btn-secondary" aria-label="Add 0 runs">0</button>
+        <button onclick="addRun(1)" class="btn btn-primary" aria-label="Add 1 run">1</button>
+        <button onclick="addRun(2)" class="btn btn-primary" aria-label="Add 2 runs">2</button>
+        <button onclick="addRun(3)" class="btn btn-primary" aria-label="Add 3 runs">3</button>
+        <button onclick="addRun(4)" class="btn btn-success" aria-label="Add 4 runs">4</button>
+        <button onclick="addRun(6)" class="btn btn-success" aria-label="Add 6 runs">6</button>
+      </div>
+      
+      <div class="button-group">
+        <button onclick="startWide()" class="btn btn-secondary btn-smaller">Wide</button>
+        <button onclick="showOutModal()" class="btn btn-danger btn-smaller">OUT</button>
+        <button onclick="startNoBall()" class="btn btn-secondary btn-smaller">No Ball</button>
+      </div>
+
+      <div class="toggle-controls">
+        <button onclick="toggleInnings()" class="btn btn-secondary btn-smaller" id="inningsBtn">
+          End Innings
+        </button>
+        <button onclick="showRareButtonsModal()" class="btn btn-secondary btn-smaller">
+          Rare buttons
+        </button>
+        <button onclick="undoLast()" class="btn btn-secondary undo-btn btn-smaller">
+          UNDO
+        </button>
+      </div>
+
+    </section>
+
+    <div class="keyboard-hint" id="keyboardHint">
+      Press any key to see shortcuts
+    </div>
+
+    <!-- Modal for NoaBall/Wide run selection -->
+    <div class="modal" id="runModal">
+      <div class="modal-content">
+        <div class="modal-title" id="modalTitle">No Ball</div>
+        <div class="modal-subtitle">Select additional runs scored</div>
+        <div class="modal-buttons">
+          <button class="modal-btn" onclick="selectModalRun(0)">0</button>
+          <button class="modal-btn" onclick="selectModalRun(1)">1</button>
+          <button class="modal-btn" onclick="selectModalRun(2)">2</button>
+          <button class="modal-btn" onclick="selectModalRun(3)">3</button>
+          <button class="modal-btn" onclick="selectModalRun(4)">4</button>
+          <button class="modal-btn" onclick="selectModalRun(5)">5</button>
+          <button class="modal-btn" onclick="selectModalRun(6)">6</button>
+          <button class="modal-btn" onclick="selectModalRun(7)">7</button>
+        </div>
+        <div id="wideSpecialOptions" style="display: none; margin-bottom: 12px;">
+          <button class="modal-btn" style="background: var(--gradient-danger); grid-column: 1 / -1;" onclick="selectWideStumped()">
+            <i class="fas fa-exclamation-triangle"></i> Stumped
+          </button>
+        </div>
+        <button class="modal-close" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Modal for Rare Buttons -->
+    <div class="modal" id="rareButtonsModal">
+      <div class="modal-content">
+        <div class="modal-title">Rare Scoring Options</div>
+        <div class="modal-subtitle">Select unusual runs</div>
+        <div class="modal-buttons" style="grid-template-columns: repeat(4, 1fr);">
+          <button class="modal-btn" onclick="addRunAndCloseRare(5)">5</button>
+          <button class="modal-btn" onclick="addRunAndCloseRare(7)">7</button>
+          <button class="modal-btn" onclick="addRunAndCloseRare(8)">8</button>
+          <button class="modal-btn" onclick="addRunAndCloseRare(9)">9</button>
+        </div>
+        <button class="modal-close" onclick="closeRareModal()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Modal for OUT scenarios -->
+    <div class="modal" id="outModal">
+      <div class="modal-content">
+        <div class="modal-title">How was the batsman dismissed?</div>
+        <div class="modal-subtitle">Select the type of dismissal</div>
+        <div class="modal-buttons" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+          <button class="modal-btn" onclick="selectDismissalType('Caught')">
+            🤲 Caught
+          </button>
+          <button class="modal-btn" onclick="selectDismissalType('Bowled')">
+            🎳 Bowled
+          </button>
+          <button class="modal-btn" onclick="selectDismissalType('Stumped')">
+            🥅 Stumped
+          </button>
+          <button class="modal-btn" onclick="selectDismissalType('Run Out')">
+            🏃 Run Out
+          </button>
+          <button class="modal-btn" onclick="selectDismissalType('Hit Wicket')">
+            🏏 Hit Wicket
+          </button>
+          <button class="modal-btn" onclick="selectDismissalType('Others')">
+            ⚡ Others
+          </button>
+        </div>
+        <button class="modal-close" onclick="closeOutModal()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Modal for Run Out runs selection -->
+    <div class="modal" id="runOutModal">
+      <div class="modal-content">
+        <div class="modal-title">Run Out</div>
+        <div class="modal-subtitle">How many runs were completed before the run out?</div>
+        <div class="modal-buttons" style="grid-template-columns: repeat(4, 1fr);">
+          <button class="modal-btn" onclick="addRunOutWithRuns(0)">0</button>
+          <button class="modal-btn" onclick="addRunOutWithRuns(1)">1</button>
+          <button class="modal-btn" onclick="addRunOutWithRuns(2)">2</button>
+          <button class="modal-btn" onclick="addRunOutWithRuns(3)">3</button>
+        </div>
+        <button class="modal-close" onclick="closeRunOutModal()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Modal for Game Restore -->
+    <div class="modal" id="restoreModal">
+      <div class="modal-content">
+        <div class="modal-title">You refreshed! 🔄</div>
+        <div class="modal-subtitle">Do you want new scorecard or resume the current scorecard?</div>
+        <div class="modal-buttons" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+          <button class="modal-btn" onclick="resumeScorecard()" style="background: var(--gradient-success);">
+            📋 RESUME
+          </button>
+          <button class="modal-btn" onclick="startNewScorecard()" style="background: var(--gradient-primary);">
+            ✨ NEW
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Target Input -->
+    <div class="modal" id="targetModal">
+      <div class="modal-content">
+        <div class="modal-title">🎯 Enter Target</div>
+        <div class="modal-subtitle">What's the target score for 2nd innings?</div>
+        <div style="margin: 20px 0;">
+          <input type="number" id="targetInput" placeholder="Enter target score" 
+                 style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; 
+                        font-size: 16px; text-align: center; background: var(--surface); color: var(--text-primary);">
+        </div>
+        <div class="modal-buttons" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+          <button class="modal-btn" onclick="setTarget()" style="background: var(--gradient-primary);">
+            🎯 SET TARGET
+          </button>
+          <button class="modal-btn" onclick="cancelTarget()" style="background: var(--surface-tertiary); color: var(--text-primary);">
+            ❌ CANCEL
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Match Result -->
+    <div class="modal" id="matchResultModal">
+      <div class="modal-content">
+        <div class="modal-title" id="matchResultTitle">🎉 Match Result</div>
+        <div class="modal-subtitle" id="matchResultSubtitle">Congratulations!</div>
+        <div style="margin: 20px 0; text-align: center;">
+          <div id="matchResultDetails" style="font-size: 14px; font-weight: 400; color: var(--text-secondary); margin-bottom: 16px; text-align: center; opacity: 0.8;">
+            Match details will appear here
+          </div>
+          <div id="matchResultStats" style="font-size: 14px; color: var(--text-secondary);">
+            Match statistics will appear here
+          </div>
+        </div>
+        <div class="modal-buttons" style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 20px;">
+          <button class="modal-btn" onclick="showDetailedSummary()" style="background: var(--gradient-primary); color: white; padding: 12px 24px; font-size: 14px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3); width: 200px;">
+            📊 Detailed Summary
+          </button>
+          <div style="display: flex; gap: 12px; width: 100%; justify-content: center;">
+            <button class="modal-btn" onclick="closeMatchResult()" style="background: var(--surface-tertiary); color: var(--text-primary); padding: 10px 16px; font-size: 12px; border-radius: 8px; flex: 1; max-width: 120px; border: 1px solid var(--border);">
+              🔧 Correction
+            </button>
+            <button class="modal-btn" onclick="startNewMatch()" style="background: var(--gradient-success); color: white; padding: 10px 16px; font-size: 12px; border-radius: 8px; flex: 1; max-width: 120px; box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);">
+              🆕 New Match
+            </button>
+          </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Detailed Summary -->
+    <div class="modal" id="detailedSummaryModal">
+      <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-title">📊 DETAILED MATCH SUMMARY</div>
+        <div style="margin: 20px 0; max-height: 300px; overflow-y: auto;">
+          <pre id="detailedSummaryContent" style="white-space: pre-wrap; font-family: monospace; font-size: 12px; line-height: 1.4; color: var(--text-primary);"></pre>
+        </div>
+        <div class="modal-buttons" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <button class="modal-btn" onclick="saveDetailedSummaryScreenshot()" style="background: var(--gradient-success); color: white; padding: 8px 16px; font-size: 12px;">
+            Save Screenshot
+          </button>
+          <button class="modal-btn" onclick="closeDetailedSummary()" style="background: var(--surface-tertiary); color: var(--text-primary); padding: 8px 16px; font-size: 12px;">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Innings Transition -->
+    <div class="modal" id="inningsTransitionModal">
+      <div class="modal-content">
+        <div class="modal-title">🏏 End of First Innings</div>
+        <div class="modal-subtitle" id="inningsTransitionText">Ready for the next innings?</div>
+        <div style="margin: 20px 0; text-align: center;">
+          <div id="inningsScoreDetails" style="font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 12px;">
+            Score details will appear here
+          </div>
+          <div id="inningsTargetInfo" style="font-size: 14px; color: var(--text-secondary);">
+            Target information will appear here
+          </div>
+        </div>
+        <div class="modal-buttons" style="grid-template-columns: 1fr; gap: 12px;">
+          <button class="modal-btn" onclick="confirmInningsTransition()" style="background: var(--gradient-success);">
+            � START 2ND INNINGS
+          </button>
+          <button class="modal-btn" onclick="cancelInningsTransition()" style="background: var(--surface-tertiary); color: var(--text-primary);">
+            ❌ NOT YET
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Match Setup -->
+    <div class="modal" id="matchSetupModal">
+      <div class="modal-content">
+        <div class="modal-title">🏏 Match Setup</div>
+        <div class="modal-subtitle">How many overs per innings?</div>
+        <div style="margin: 20px 0;">
+          <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+            <button class="modal-btn" onclick="setMatchOvers(20)" style="background: var(--gradient-primary); font-size: 14px; padding: 8px 16px;">
+              20 Overs
+            </button>
+            <button class="modal-btn" onclick="setMatchOvers(50)" style="background: var(--gradient-primary); font-size: 14px; padding: 8px 16px;">
+              50 Overs
+            </button>
+          </div>
+          <div style="text-align: center; margin-bottom: 10px; color: var(--text-secondary);">Or set custom:</div>
+          <input type="number" id="matchOversInput" placeholder="Enter overs" min="1" max="100"
+                 style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; 
+                        font-size: 16px; text-align: center; background: var(--surface); color: var(--text-primary);">
+        </div>
+        <div class="modal-buttons" style="grid-template-columns: 1fr; gap: 12px;">
+          <button class="modal-btn" onclick="confirmMatchSetup()" style="background: var(--gradient-success);">
+            🎯 START MATCH
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Settings -->
+    <div class="modal" id="settingsModal">
+      <div class="modal-content">
+        <div class="modal-title">⚙️ Match Settings</div>
+        <div class="modal-subtitle">Adjust match parameters</div>
+        
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Overs per innings:</label>
+          <input type="number" id="settingsOversInput" placeholder="Enter overs" min="1" max="100"
+                 style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; 
+                        font-size: 16px; text-align: center; background: var(--surface); color: var(--text-primary);">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Players per team:</label>
+          <input type="number" id="settingsPlayersInput" placeholder="Enter players" min="2" max="20"
+                 style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; 
+                        font-size: 16px; text-align: center; background: var(--surface); color: var(--text-primary);">
+        </div>
+        
+        <div id="settingsTargetSection" style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Target score:</label>
+          <input type="number" id="settingsTargetInput" placeholder="Enter target" min="1"
+                 style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; 
+                        font-size: 16px; text-align: center; background: var(--surface); color: var(--text-primary);">
+        </div>
+        
+        <div class="modal-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
+          <button class="modal-btn" onclick="saveSettings()" style="background: var(--gradient-primary);">
+            ✅ SAVE
+          </button>
+          <button class="modal-btn" onclick="closeSettingsModal()" style="background: var(--surface-tertiary); color: var(--text-primary);">
+            ❌ CANCEL
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Overs Adjustment -->
+    <div class="modal" id="oversAdjustModal">
+      <div class="modal-content">
+        <div class="modal-title">⚙️ Match Settings</div>
+        <div class="modal-subtitle">Adjust match parameters</div>
+        <div style="margin: 20px 0;">
+          <div style="text-align: center; margin-bottom: 15px;">
+            <span style="font-size: 16px; color: var(--text-primary);">Current: <strong id="currentOversDisplay">20</strong> overs per innings</span>
+          </div>
+          <input type="number" id="adjustOversInput" placeholder="Enter new overs" min="1" max="100"
+                 style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; 
+                        font-size: 16px; text-align: center; background: var(--surface); color: var(--text-primary); margin-bottom: 15px;">
+          
+          <div style="text-align: center; margin-bottom: 15px;">
+            <span style="font-size: 16px; color: var(--text-primary);">Players per team: <strong id="currentPlayersDisplay">11</strong></span>
+          </div>
+          <input type="number" id="adjustPlayersInput" placeholder="Enter number of players" min="2" max="20"
+                 style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; 
+                        font-size: 16px; text-align: center; background: var(--surface); color: var(--text-primary); margin-bottom: 15px;">>
+          
+          <div id="targetEditSection" style="display: none;">
+            <div style="text-align: center; margin-bottom: 10px;">
+              <span style="font-size: 14px; color: var(--text-secondary);">2nd Innings Target Settings</span>
+            </div>
+            <div style="text-align: center; margin-bottom: 15px;">
+              <span style="font-size: 16px; color: var(--text-primary);">Current Target: <strong id="currentTargetDisplay">0</strong> runs</span>
+            </div>
+            <input type="number" id="adjustTargetInput" placeholder="Enter new target" min="1"
+                   style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; 
+                          font-size: 16px; text-align: center; background: var(--surface); color: var(--text-primary);">
+          </div>
+        </div>
+        <div class="modal-buttons" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+          <button class="modal-btn" onclick="confirmSettingsAdjustment()" style="background: var(--gradient-primary);">
+            ✅ UPDATE
+          </button>
+          <button class="modal-btn" onclick="cancelSettingsAdjustment()" style="background: var(--surface-tertiary); color: var(--text-primary);">
+            ❌ CANCEL
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-main">
+          <p class="footer-text">
+            <span>Passionately crafted by</span><br>
+            <a href="https://rajathverse.com" class="footer-link" target="_blank" rel="noopener noreferrer">⚡rajathverse.com⚡</a>
+          </p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    let totalRuns = 0;
+    let totalWickets = 0;
+    let balls = 0;
+    let timeline = [[]];
+    let validDeliveries = 0;
+    let isNoBallPending = false;
+    let isWidePending = false;
+    let soundEnabled = true;
+    let currentInnings = 1; // 1 for first innings, 2 for second innings
+    let targetScore = 0; // Target score for second innings
+    let targetOvers = 0; // Target overs for second innings (in balls)
+    let firstInningsOvers = 0; // Overs bowled in first innings (in balls)
+    let matchTotalOvers = 20; // Total overs allocated for each innings
+    let matchSetupDone = false; // Track if match setup is complete
+    let totalPlayers = 11; // Total number of players per team
+    let matchCompleted = false; // Track if match/innings has ended
+    let undoModeActive = false; // Track if in undo-only mode
+    let firstInningsStats = null; // Store first innings stats
+    let stats = {
+      boundaries: 0,
+      fours: 0,
+      sixes: 0,
+      dotBalls: 0,
+      ballsFaced: 0,
+      extras: 0
+    };
+    let currentModalType = ''; // 'noball' or 'wide'
+
+    // Audio context for sound effects
+    let audioContext = null;
+    let audioInitialized = false;
+    
+    // Function to enforce match setup before scoring actions
+    function enforceMatchSetup() {
+      if (!matchSetupDone) {
+        showMessage('⚙️ Please set up match settings first!');
+        showMatchSetup();
+        return false;
+      }
+      return true;
+    }
+    
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      // Resume audio context if suspended (required for mobile)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+          audioInitialized = true;
+        });
+      } else {
+        audioInitialized = true;
+      }
+    }
+    
+    // Match Setup Functions
+    function showMatchSetup() {
+      // Only show values if match setup was completed by user, otherwise empty
+      if (matchSetupDone) {
+        // Show user-entered values from previous settings
+        document.getElementById('settingsOversInput').value = matchTotalOvers;
+        document.getElementById('settingsPlayersInput').value = totalPlayers;
+      } else {
+        // First time - show empty fields
+        document.getElementById('settingsOversInput').value = '';
+        document.getElementById('settingsPlayersInput').value = '';
+      }
+      
+      // Show target section only during second innings
+      const targetSection = document.getElementById('settingsTargetSection');
+      
+      if (currentInnings === 2) {
+        // Second innings - show target editing option
+        targetSection.style.display = 'block';
+        document.getElementById('settingsTargetInput').value = targetScore || '';
+        document.getElementById('settingsTargetInput').placeholder = "Enter target";
+      } else {
+        // First innings - hide target section completely
+        targetSection.style.display = 'none';
+      }
+      
+      document.getElementById('settingsModal').classList.add('show');
+      playSound(400, 100);
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('show');
+    }
+
+    function saveSettings() {
+      const newOvers = parseInt(document.getElementById('settingsOversInput').value);
+      const newPlayers = parseInt(document.getElementById('settingsPlayersInput').value);
+      const newTarget = parseInt(document.getElementById('settingsTargetInput').value);
+      
+      // Validate overs
+      if (!newOvers || newOvers < 1 || newOvers > 100) {
+        alert('Please enter a valid number of overs (1-100)');
+        return;
+      }
+      
+      // Validate players
+      if (!newPlayers || newPlayers < 2 || newPlayers > 20) {
+        alert('Please enter a valid number of players (2-20)');
+        return;
+      }
+      
+      // Validate target if provided
+      if (newTarget && newTarget < 1) {
+        alert('Please enter a valid target score');
+        return;
+      }
+      
+      // Update values
+      matchTotalOvers = newOvers;
+      totalPlayers = newPlayers;
+      matchSetupDone = true; // Mark setup as complete
+      
+      // Update target only if we're in second innings and target is provided
+      if (currentInnings === 2 && newTarget && newTarget > 0) {
+        targetScore = newTarget;
+        // Recalculate target overs for second innings
+        targetOvers = matchTotalOvers * 6; // Convert to balls
+      }
+      
+      // Close modal and save state
+      closeSettingsModal();
+      saveState();
+      updateDisplay();
+      
+      // Show appropriate success message
+      if (currentInnings === 2 && newTarget) {
+        showMessage('⚙️ Settings and target updated successfully!');
+      } else {
+        showMessage('⚙️ Settings updated successfully!');
+      }
+    }
+
+    function setMatchOvers(overs) {
+      document.getElementById('matchOversInput').value = overs;
+    }
+
+    function confirmMatchSetup() {
+      const oversInput = document.getElementById('matchOversInput').value;
+      const overs = parseInt(oversInput);
+      
+      if (!overs || overs < 1 || overs > 100) {
+        alert('Please enter a valid number of overs (1-100)');
+        return;
+      }
+      
+      matchTotalOvers = overs;
+      matchSetupDone = true;
+      
+      document.getElementById('matchSetupModal').style.display = 'none';
+      saveState();
+      
+      // Update display if needed
+      updateDisplay();
+    }
+
+    function showOversAdjustment() {
+      // Restore full modal display
+      document.querySelector('#oversAdjustModal .modal-title').textContent = '⚙️ Match Settings';
+      document.querySelector('#oversAdjustModal .modal-subtitle').textContent = 'Adjust match parameters';
+      
+      const oversSection = document.querySelector('#oversAdjustModal .modal-content > div:nth-child(3)');
+      const playersSection = oversSection.children[2]; // Players section
+      const oversInputSection = oversSection.children[0]; // Overs display
+      const oversInput = oversSection.children[1]; // Overs input
+      
+      // Show all sections
+      oversInputSection.style.display = 'block';
+      oversInput.style.display = 'block'; 
+      playersSection.style.display = 'block';
+      
+      document.getElementById('currentOversDisplay').textContent = matchTotalOvers;
+      document.getElementById('adjustOversInput').value = matchTotalOvers;
+      document.getElementById('currentPlayersDisplay').textContent = totalPlayers;
+      document.getElementById('adjustPlayersInput').value = totalPlayers;
+      
+      // Show target editing section only if we're in second innings
+      const targetSection = document.getElementById('targetEditSection');
+      if (currentInnings === 2) {
+        targetSection.style.display = 'block';
+        document.getElementById('currentTargetDisplay').textContent = targetScore;
+        document.getElementById('adjustTargetInput').value = targetScore;
+      } else {
+        targetSection.style.display = 'none';
+      }
+      
+      document.getElementById('oversAdjustModal').style.display = 'flex';
+    }
+
+    function confirmSettingsAdjustment() {
+      // Check if we're in target-only mode (overs input is hidden)
+      const oversInput = document.getElementById('adjustOversInput');
+      const isTargetOnlyMode = oversInput.style.display === 'none';
+      
+      if (!isTargetOnlyMode) {
+        // Full settings mode - validate overs and players
+        const newOvers = parseInt(oversInput.value);
+        
+        if (!newOvers || newOvers < 1 || newOvers > 100) {
+          alert('Please enter a valid number of overs (1-100)');
+          return;
+        }
+        
+        matchTotalOvers = newOvers;
+        
+        // Update players setting
+        const playersInput = document.getElementById('adjustPlayersInput').value;
+        const newPlayers = parseInt(playersInput);
+        
+        if (!newPlayers || newPlayers < 2 || newPlayers > 20) {
+          alert('Please enter a valid number of players (2-20)');
+          return;
+        }
+        
+        totalPlayers = newPlayers;
+      }
+      
+      // Update target if we're in second innings and target input has value
+      if (currentInnings === 2) {
+        const targetInput = document.getElementById('adjustTargetInput').value;
+        const newTarget = parseInt(targetInput);
+        
+        if (targetInput && (!newTarget || newTarget < 1)) {
+          alert('Please enter a valid target score');
+          return;
+        }
+        
+        if (newTarget) {
+          targetScore = newTarget;
+        }
+        
+        // Recalculate target overs for second innings
+        targetOvers = matchTotalOvers * 6; // Convert to balls
+      }
+      
+      document.getElementById('oversAdjustModal').style.display = 'none';
+      saveState();
+      updateDisplay();
+      
+      // Show confirmation message
+      if (currentInnings === 2 && document.getElementById('adjustTargetInput').value) {
+        showMessage('⚙️ Match settings updated successfully!');
+      } else {
+        showMessage('⚙️ Match overs updated successfully!');
+      }
+    }
+
+    function cancelSettingsAdjustment() {
+      document.getElementById('oversAdjustModal').style.display = 'none';
+    }
+
+    // Keep old function names for compatibility
+    function confirmOversAdjustment() {
+      confirmSettingsAdjustment();
+    }
+
+    function cancelOversAdjustment() {
+      cancelSettingsAdjustment();
+    }
+    
+    // Match State Control Functions
+    function setUndoMode(active) {
+      undoModeActive = active;
+      
+      // Get all scoring buttons
+      const scoringButtons = document.querySelectorAll('.btn, .special-btn, .modal-btn[onclick*="addRun"], .modal-btn[onclick*="startNoBall"], .modal-btn[onclick*="startWide"]');
+      const inningsBtn = document.getElementById('inningsBtn');
+      const undoBtn = document.querySelector('.undo-btn');
+      const endInningsBtn = document.getElementById('endInningsBtn');
+      
+      if (active) {
+        // Undo mode - disable all except undo
+        scoringButtons.forEach(btn => {
+          if (!btn.classList.contains('undo-btn')) {
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+          }
+        });
+        
+        // Never disable the innings button - keep it always functional
+        if (inningsBtn) {
+          inningsBtn.style.opacity = '1';
+          inningsBtn.style.pointerEvents = 'auto';
+        }
+        
+        if (undoBtn) {
+          undoBtn.style.opacity = '1';
+          undoBtn.style.pointerEvents = 'auto';
+          undoBtn.style.background = 'var(--gradient-warning)';
+          undoBtn.style.animation = 'pulse 2s infinite';
+        }
+        
+        // For first innings, show different message and enable end innings button
+        if (currentInnings === 1) {
+          showMessage('🔄 Innings completed.\nClick UNDO to correct or END 1ST INNINGS to continue.');
+          if (endInningsBtn) {
+            endInningsBtn.style.opacity = '1';
+            endInningsBtn.style.pointerEvents = 'auto';
+            endInningsBtn.style.background = 'var(--gradient-success)';
+          }
+        } else {
+          showMessage('🔄 Match completed.\nClick UNDO to correct last entry or start NEW MATCH.');
+        }
+        
+      } else {
+        // Normal mode - enable all
+        scoringButtons.forEach(btn => {
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
+        });
+        
+        if (inningsBtn) {
+          inningsBtn.style.opacity = '1';
+          inningsBtn.style.pointerEvents = 'auto';
+        }
+        
+        if (undoBtn) {
+          undoBtn.style.background = 'var(--surface-tertiary)';
+          undoBtn.style.animation = 'none';
+        }
+        
+        if (endInningsBtn) {
+          endInningsBtn.style.display = 'none';
+        }
+        
+        matchCompleted = false;
+      }
+    }
+    
+    function showEndInningsButton() {
+      // Create or show the end innings button
+      let endInningsBtn = document.getElementById('endInningsBtn');
+      if (!endInningsBtn) {
+        endInningsBtn = document.createElement('button');
+        endInningsBtn.id = 'endInningsBtn';
+        endInningsBtn.className = 'btn special-btn';
+        endInningsBtn.innerHTML = '🏁 End 1st Innings';
+        endInningsBtn.onclick = () => {
+          // Exit undo mode and proceed to next innings
+          setUndoMode(false);
+          showInningsTransitionModal();
+        };
+        endInningsBtn.style.display = 'none';
+        
+        // Add it to the utility row
+        const utilityRow = document.querySelector('.utility-row');
+        if (utilityRow) {
+          utilityRow.appendChild(endInningsBtn);
+        }
+      }
+      
+      endInningsBtn.style.display = 'block';
+    }
+
+    function playSound(frequency, duration = 100, type = 'sine') {
+      if (!soundEnabled || !audioContext) return;
+      
+      // Initialize audio on first interaction for mobile compatibility
+      if (!audioInitialized) {
+        initAudio();
+        // Try to play sound after a short delay
+        setTimeout(() => playSound(frequency, duration, type), 100);
+        return;
+      }
+      
+      try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+        oscillator.type = type;
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration / 1000);
+      } catch (error) {
+        console.log('Audio playback failed:', error);
+      }
+    }
+
+    function animateButton(button) {
+      button.classList.add('btn-animate');
+      setTimeout(() => button.classList.remove('btn-animate'), 150);
+    }
+
+    function animateScore() {
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      scoreDisplay.classList.add('pulse');
+      setTimeout(() => scoreDisplay.classList.remove('pulse'), 600);
+    }
+
+    function updateDisplay() {
+      document.getElementById('score').innerText = totalRuns;
+      document.getElementById('wickets').innerText = totalWickets;
+      const overs = Math.floor(balls / 6) + '.' + (balls % 6);
+      document.getElementById('overs').innerText = overs;
+
+      // Update statistics
+      const runRate = balls > 0 ? (totalRuns / (balls / 6)).toFixed(2) : '0.00';
+      document.getElementById('runRate').innerText = runRate;
+
+      // Update target information for second innings
+      const targetDisplay = document.getElementById('targetDisplay');
+      const scoreboard = document.querySelector('.scoreboard');
+      
+      if (currentInnings === 2 && targetScore > 0) {
+        targetDisplay.style.display = 'block';
+        scoreboard.classList.remove('first-innings'); // Remove first innings styling
+        document.getElementById('target').innerText = targetScore;
+        
+        const runsNeeded = Math.max(0, targetScore - totalRuns);
+        document.getElementById('runsNeeded').innerText = runsNeeded;
+        
+        const wicketsLeft = (totalPlayers - 1) - totalWickets;
+        const ballsUsed = balls;
+        const ballsAllowed = targetOvers; // balls allowed based on first innings
+        const ballsLeft = Math.max(0, ballsAllowed - ballsUsed);
+        const oversLeftText = Math.floor(ballsLeft / 6) + '.' + (ballsLeft % 6);
+        
+        const requiredRate = (ballsLeft > 0 && runsNeeded > 0) ? 
+          ((runsNeeded / (ballsLeft / 6)).toFixed(2)) : '0.00';
+        
+        document.getElementById('requiredRate').innerText = requiredRate;
+        document.getElementById('oversLeft').innerText = oversLeftText;
+        
+        // Check match status
+        if (runsNeeded <= 0) {
+          // IMMEDIATELY disable buttons when target is achieved
+          matchCompleted = true;
+          setUndoMode(true);
+          
+          if (totalRuns === targetScore - 1) {
+            showMatchResult('tied', 'Match Completed', 'Both teams scored equal runs');
+          } else {
+            showMatchResult('chased', 'Match Completed', `Target achieved with ${oversLeftText} overs remaining`);
+          }
+        } else if (wicketsLeft <= 0) {
+          // IMMEDIATELY disable buttons when all wickets are lost
+          matchCompleted = true;
+          setUndoMode(true);
+          
+          if (totalRuns === targetScore - 1) {
+            showMatchResult('tied', 'Match Completed', 'Both teams scored equal runs');
+          } else {
+            showMatchResult('defended', 'Match Completed', `All out - needed ${runsNeeded} more runs`);
+          }
+        } else if (ballsLeft <= 0 && runsNeeded > 0) {
+          // IMMEDIATELY disable buttons when overs are completed
+          matchCompleted = true;
+          setUndoMode(true);
+          
+          if (totalRuns === targetScore - 1) {
+            showMatchResult('tied', 'Match Completed', 'Both teams scored equal runs');
+          } else {
+            showMatchResult('defended', 'Match Completed', `Fell short by ${runsNeeded} runs`);
+          }
+        }
+      } else {
+        targetDisplay.style.display = 'none';
+        scoreboard.classList.add('first-innings'); // Add first innings styling for larger content
+      }
+
+      // Create timeline display - show all overs
+      const timelineHtml = timeline
+        .map((over, index) => {
+          const ballsHtml = over.map(entry => {
+            let className = 'ball-runs';
+            let displayText = entry;
+            
+            // Handle different dismissal types
+            if (entry === 'OUT' || entry === 'CAUGHT' || entry === 'BOWLED' || 
+                entry === 'STUMPED' || entry === 'HIT WICKET' || entry === 'OTHERS') {
+              className = 'ball-out';
+              displayText = 'W';
+            }
+            else if (entry === 'RUN OUT') {
+              className = 'ball-out';
+              displayText = 'W';
+            }
+            else if (entry.includes('+ RUN OUT')) {
+              // Extract runs from "X + RUN OUT" format
+              const runs = entry.split(' + ')[0];
+              className = 'ball-out';
+              displayText = `W+${runs}`;
+            }
+            else if (entry.includes('+ OUT')) {
+              // Extract runs from "X + OUT" format (shouldn't happen but just in case)
+              const runs = entry.split(' + ')[0];
+              className = 'ball-out';
+              displayText = `W+${runs}`;
+            }
+            else if (entry === 'WD+STUMP') {
+              className = 'ball-out';
+              displayText = 'W';
+            }
+            else if (entry === '0') className = 'ball-dot';
+            else if (entry.startsWith('NB') || entry.startsWith('WD')) className = 'ball-extra';
+            
+            return `<span class="ball-item ${className}">${displayText}</span>`;
+          }).join('');
+          
+          const overRuns = over.reduce((sum, entry) => {
+            if (entry === 'OUT' || entry === 'CAUGHT' || entry === 'BOWLED' || 
+                entry === 'STUMPED' || entry === 'RUN OUT' || 
+                entry === 'HIT WICKET' || entry === 'OTHERS') {
+              return sum;
+            }
+            if (entry.includes('+ OUT') || entry.includes('+ RUN OUT')) {
+              // Extract runs from "X + OUT" or "X + RUN OUT" format
+              const runs = parseInt(entry.split(' + ')[0]);
+              return sum + (isNaN(runs) ? 0 : runs);
+            }
+            if (entry === 'WD+STUMP') return sum + 1;
+            if (entry.startsWith('NB') || entry.startsWith('WD')) {
+              const parts = entry.split(' + ');
+              return sum + 1 + (parts.length > 1 ? parseInt(parts[1]) || 0 : 0);
+            }
+            return sum + (parseInt(entry) || 0);
+          }, 0);
+          
+          // Calculate wickets in this over
+          const overWickets = over.reduce((count, entry) => {
+            if (entry === 'OUT' || entry === 'CAUGHT' || entry === 'BOWLED' || 
+                entry === 'STUMPED' || entry === 'RUN OUT' || 
+                entry === 'HIT WICKET' || entry === 'OTHERS' ||
+                entry.includes('+ OUT') || entry.includes('+ RUN OUT') ||
+                entry === 'WD+STUMP') {
+              return count + 1;
+            }
+            return count;
+          }, 0);
+          
+          return `
+            <div class="timeline-entry" id="over-${index}" data-runs="${overRuns}" data-wickets="${overWickets}">
+              ${ballsHtml}
+              <div class="runs-circle">${overRuns}</div>
+              <div class="wickets-circle">${overWickets}</div>
+            </div>
+          `;
+        })
+        .join('');
+
+      // Check if timeline has any actual entries
+      const hasEntries = timeline.some(over => over.length > 0);
+      
+      // If no entries yet, show a placeholder
+      const finalHtml = hasEntries ? timelineHtml : `
+        <div class="timeline-entry timeline-placeholder">
+          <span class="ball-item ball-message">Game on! Start scoring 🏏</span>
+        </div>
+      `;
+
+      document.getElementById('timelineLog').innerHTML = finalHtml;
+      
+      // Skip all scrolling behavior if there are no actual entries (showing placeholder)
+      if (!hasEntries) {
+        return;
+      }
+      
+      // Auto-scroll to show the latest over within timeline container only
+      const timelineContent = document.getElementById('timelineContent');
+      const currentOverIndex = timeline.length - 1;
+      
+      if (timelineContent && currentOverIndex >= 0) {
+        setTimeout(() => {
+          const currentOverElement = document.getElementById(`over-${currentOverIndex}`);
+          if (currentOverElement) {
+            // Calculate the scroll position manually to avoid page scrolling
+            const containerTop = timelineContent.scrollTop;
+            const containerHeight = timelineContent.clientHeight;
+            const elementTop = currentOverElement.offsetTop;
+            const elementHeight = currentOverElement.clientHeight;
+            
+            // Center the element within the container
+            const scrollTo = elementTop - (containerHeight / 2) + (elementHeight / 2);
+            
+            timelineContent.scrollTo({
+              top: Math.max(0, scrollTo),
+              behavior: 'smooth'
+            });
+          } else {
+            // Fallback to scroll to bottom
+            timelineContent.scrollTop = timelineContent.scrollHeight;
+          }
+        }, 50);
+      }
+    }
+
+    function recordDelivery(entry, isValid) {
+      if (timeline.length === 0) timeline.push([]);
+      if (timeline[timeline.length - 1].length >= 6 && validDeliveries === 0) {
+        timeline.push([]);
+      }
+      timeline[timeline.length - 1].push(entry);
+      if (isValid) {
+        balls++;
+        stats.ballsFaced++;
+        validDeliveries++;
+        if (validDeliveries === 6) {
+          validDeliveries = 0;
+        }
+      }
+      updateDisplay();
+      animateScore();
+      
+      // Check if innings should end due to overs completion
+      checkInningsCompletion();
+    }
+
+    function checkInningsCompletion() {
+      const maxBalls = matchTotalOvers * 6;
+      const maxWickets = totalPlayers - 1; // -1 because you need at least 1 batsman remaining
+      
+      // Check if first innings should end due to all wickets
+      if (currentInnings === 1 && totalWickets >= maxWickets) {
+        // IMMEDIATELY disable buttons and set undo mode
+        setUndoMode(true);
+        showEndInningsButton();
+        
+        setTimeout(() => {
+          showMessage(`📤 All out!`);
+          // Show innings transition immediately with transition effect
+          setTimeout(() => {
+            if (undoModeActive) { // Only if not undone
+              showInningsTransitionModal();
+            }
+          }, 500);
+        }, 100);
+        return;
+      }
+      
+      // Check if first innings should end due to overs completion
+      if (currentInnings === 1 && balls >= maxBalls) {
+        // IMMEDIATELY disable buttons and set undo mode
+        setUndoMode(true);
+        showEndInningsButton();
+        
+        setTimeout(() => {
+          showMessage(`🏁 ${matchTotalOvers} overs completed!`);
+          // Show innings transition immediately with transition effect
+          setTimeout(() => {
+            if (undoModeActive) { // Only if not undone
+              showInningsTransitionModal();
+            }
+          }, 500);
+        }, 100);
+        return;
+      }
+      
+      // Check if second innings should end due to overs completion
+      if (currentInnings === 2 && balls >= targetOvers) {
+        // IMMEDIATELY disable buttons and set match completed
+        matchCompleted = true;
+        setUndoMode(true);
+        
+        setTimeout(() => {
+          if (totalRuns >= targetScore) {
+            showMatchResult('chased', 'Match Completed', 'Target achieved');
+          } else if (totalRuns === targetScore - 1) {
+            showMatchResult('tied', 'Match Completed', 'Both teams scored equal runs');
+          } else {
+            const runsNeeded = targetScore - totalRuns;
+            showMatchResult('defended', 'Match Completed', `Fell short by ${runsNeeded} runs`);
+          }
+        }, 100);
+        return;
+      }
+    }
+    
+    function checkSecondInningsAllOut() {
+      const maxWickets = totalPlayers - 1;
+      
+      // Check if second innings should end due to all wickets
+      if (currentInnings === 2 && totalWickets >= maxWickets) {
+        // IMMEDIATELY disable buttons and set match completed
+        matchCompleted = true;
+        setUndoMode(true);
+        
+        setTimeout(() => {
+          showMessage(`📤 All out!`);
+          setTimeout(() => {
+            if (!undoModeActive) {
+              if (totalRuns >= targetScore) {
+                showMatchResult('chased', 'Match Completed', 'Target achieved');
+              } else if (totalRuns === targetScore - 1) {
+                showMatchResult('tied', 'Match Completed', 'Match Tied! Both teams scored equal runs');
+              } else {
+                const runsNeeded = targetScore - totalRuns;
+                showMatchResult('defended', 'Match Completed', `Fell short by ${runsNeeded} runs`);
+              }
+            }
+          }, 1500);
+        }, 100);
+      }
+    }
+
+    function celebrateSix() {
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#1e40af', '#10b981', '#3b82f6', '#60a5fa'],
+        shapes: ['circle', 'square'],
+        scalar: 1.2
+      });
+      playSound(800, 200, 'square');
+      setTimeout(() => playSound(1000, 200, 'square'), 100);
+    }
+
+    function celebrateFour() {
+      confetti({
+        particleCount: 75,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#10b981', '#34d399', '#6ee7b7'],
+        scalar: 0.8
+      });
+      playSound(600, 150, 'triangle');
+    }
+
+    function addRun(runs) {
+      if (!enforceMatchSetup()) return; // Check match setup first
+      if (undoModeActive) return; // Prevent scoring in undo mode
+      
+      totalRuns += runs;
+      recordDelivery(runs === 0 ? '0' : runs.toString(), true);
+      
+      // Update statistics
+      if (runs === 0) stats.dotBalls++;
+      if (runs === 4) {
+        stats.boundaries++;
+        stats.fours++;
+      }
+      if (runs === 6) {
+        stats.boundaries++;
+        stats.sixes++;
+      }
+      
+      // Sound effects and celebrations
+      if (runs === 6) {
+        celebrateSix();
+      } else if (runs === 4) {
+        celebrateFour();
+      } else if (runs === 0) {
+        playSound(300, 80);
+      } else {
+        playSound(500, 100);
+      }
+    }
+
+    function startNoBall() {
+      if (!enforceMatchSetup()) return; // Check match setup first
+      if (undoModeActive) return; // Prevent scoring in undo mode
+      if (!isNoBallPending && !isWidePending) {
+        currentModalType = 'noball';
+        showRunModal('No Ball', 'Select additional runs scored on this No Ball');
+      }
+    }
+
+    function startWide() {
+      if (!enforceMatchSetup()) return; // Check match setup first
+      if (undoModeActive) return; // Prevent scoring in undo mode
+      if (!isWidePending && !isNoBallPending) {
+        currentModalType = 'wide';
+        showRunModal('Wide', 'Select additional runs scored on this Wide');
+        // Show the Wide + Stumped option for wide deliveries
+        document.getElementById('wideSpecialOptions').style.display = 'block';
+      }
+    }
+
+    function showRunModal(title, subtitle) {
+      document.getElementById('modalTitle').textContent = title;
+      document.querySelector('.modal-subtitle').textContent = subtitle;
+      
+      // Hide wide special options by default (show only for wide)
+      document.getElementById('wideSpecialOptions').style.display = 'none';
+      
+      document.getElementById('runModal').classList.add('show');
+      playSound(400, 100);
+    }
+
+    function selectWideStumped() {
+      totalWickets++;
+      totalRuns += 1;
+      stats.extras += 1;
+      recordDelivery('WD+STUMP', false);
+      playSound(200, 300, 'sawtooth');
+      showMessage('Wide + Stumped! 🎯');
+      closeModal();
+    }
+
+    function closeModal() {
+      document.getElementById('runModal').classList.remove('show');
+      // Hide wide special options when closing
+      document.getElementById('wideSpecialOptions').style.display = 'none';
+      currentModalType = '';
+      isNoBallPending = false;
+      isWidePending = false;
+    }
+
+    function selectModalRun(runs) {
+      if (currentModalType === 'noball') {
+        totalRuns += 1 + runs;
+        stats.extras += 1;
+        recordDelivery(`NB + ${runs}`, false);
+        showMessage(`No Ball + ${runs} runs added`);
+      } else if (currentModalType === 'wide') {
+        totalRuns += 1 + runs;
+        stats.extras += 1;
+        recordDelivery(`WD + ${runs}`, false);
+        showMessage(`Wide + ${runs} runs added`);
+      }
+      
+      // Update statistics for boundaries
+      if (runs === 4) {
+        stats.boundaries++;
+        stats.fours++;
+        celebrateFour();
+      } else if (runs === 6) {
+        stats.boundaries++;
+        stats.sixes++;
+        celebrateSix();
+      } else {
+        playSound(500, 100);
+      }
+      
+      closeModal();
+    }
+
+    function showOutModal() {
+      if (!enforceMatchSetup()) return; // Check match setup first
+      document.getElementById('outModal').classList.add('show');
+      playSound(400, 100);
+    }
+
+    function closeOutModal() {
+      document.getElementById('outModal').classList.remove('show');
+    }
+
+    function closeRunOutModal() {
+      document.getElementById('runOutModal').classList.remove('show');
+    }
+
+    function selectDismissalType(dismissalType) {
+      if (dismissalType === 'Run Out') {
+        // Close first modal and open run out modal
+        closeOutModal();
+        setTimeout(() => {
+          document.getElementById('runOutModal').classList.add('show');
+          playSound(400, 100);
+        }, 150);
+      } else {
+        // Direct dismissal without runs
+        totalWickets++;
+        recordDelivery(dismissalType.toUpperCase(), true);
+        
+        let message = '';
+        switch(dismissalType) {
+          case 'Caught': message = 'CAUGHT OUT! 🤲'; break;
+          case 'Bowled': message = 'BOWLED! 🎳'; break;
+          case 'Stumped': message = 'STUMPED! 🥅'; break;
+          case 'Hit Wicket': message = 'HIT WICKET! 🏏'; break;
+          case 'Others': message = 'WICKET! ⚡'; break;
+          default: message = 'WICKET! ⚡'; break;
+        }
+        
+        showMessage(message);
+        playSound(200, 300, 'sawtooth');
+        closeOutModal();
+        
+        // Check for second innings all out (match completion)
+        checkSecondInningsAllOut();
+      }
+    }
+
+    function addRunOutWithRuns(runs) {
+      totalRuns += runs;
+      totalWickets++;
+      
+      if (runs > 0) {
+        recordDelivery(`${runs} + RUN OUT`, true);
+        showMessage(`${runs} run${runs > 1 ? 's' : ''} + Run Out! �`);
+        
+        // Update statistics for runs scored
+        if (runs === 4 || runs === 6) {
+          stats.boundaries++;
+        }
+      } else {
+        recordDelivery('RUN OUT', true);
+        showMessage('Run Out! �');
+      }
+      
+      playSound(200, 300, 'sawtooth');
+      closeRunOutModal();
+      
+      // Check for second innings all out (match completion)
+      checkSecondInningsAllOut();
+    }
+
+    function addOut() {
+      // Legacy function - now opens modal
+      showOutModal();
+    }
+
+    function addWideStump() {
+      totalWickets++;
+      totalRuns += 1;
+      recordDelivery('WD+STUMP', false);
+      playSound(200, 300, 'sawtooth');
+      showMessage('Wide + Stumped! 🎯');
+      
+      // Check for second innings all out (match completion)
+      checkSecondInningsAllOut();
+    }
+
+    function showMessage(text) {
+      const hint = document.getElementById('keyboardHint');
+      hint.textContent = text;
+      hint.classList.add('show');
+      setTimeout(() => hint.classList.remove('show'), 3000);
+    }
+
+    function recalculateStatsFromTimeline() {
+      // Reset all stats
+      totalRuns = 0;
+      totalWickets = 0;
+      balls = 0;
+      validDeliveries = 0;
+      stats = { boundaries: 0, fours: 0, sixes: 0, dotBalls: 0, ballsFaced: 0, extras: 0 };
+      
+      // Recalculate from timeline
+      for (let over of timeline) {
+        for (let delivery of over) {
+          if (delivery === 'OUT' || delivery === 'CAUGHT' || delivery === 'BOWLED' || 
+              delivery === 'STUMPED' || delivery === 'RUN OUT' || delivery === 'HIT WICKET' || 
+              delivery === 'OTHERS') {
+            totalWickets++;
+            balls++;
+            stats.ballsFaced++;
+            validDeliveries = (validDeliveries + 1) % 6;
+          } else if (delivery.includes('+ OUT') || delivery.includes('+ RUN OUT')) {
+            // Handle "X + OUT" or "X + RUN OUT" format
+            const runs = parseInt(delivery.split(' + ')[0]);
+            totalWickets++;
+            totalRuns += (isNaN(runs) ? 0 : runs);
+            balls++;
+            stats.ballsFaced++;
+            if (runs === 4) {
+              stats.boundaries++;
+              stats.fours++;
+            } else if (runs === 6) {
+              stats.boundaries++;
+              stats.sixes++;
+            }
+            validDeliveries = (validDeliveries + 1) % 6;
+          } else if (delivery === 'WD+STUMP') {
+            totalWickets++;
+            totalRuns += 1;
+            stats.extras++;
+          } else if (delivery.startsWith('NB') || delivery.startsWith('WD')) {
+            const parts = delivery.split(' + ');
+            const extraRuns = parts.length > 1 ? 1 + (parseInt(parts[1]) || 0) : 1;
+            totalRuns += extraRuns;
+            stats.extras++;
+          } else if (delivery === '0') {
+            balls++;
+            stats.ballsFaced++;
+            stats.dotBalls++;
+            validDeliveries = (validDeliveries + 1) % 6;
+          } else {
+            const run = parseInt(delivery);
+            if (!isNaN(run)) {
+              totalRuns += run;
+              balls++;
+              stats.ballsFaced++;
+              if (run === 4) {
+                stats.boundaries++;
+                stats.fours++;
+              } else if (run === 6) {
+                stats.boundaries++;
+                stats.sixes++;
+              }
+              validDeliveries = (validDeliveries + 1) % 6;
+            }
+          }
+        }
+      }
+    }
+
+    function undoLast() {
+      if (timeline.length === 0 || timeline[timeline.length - 1].length === 0) return;
+      
+      // Remove the last delivery from timeline
+      const lastOver = timeline[timeline.length - 1];
+      lastOver.pop();
+      if (lastOver.length === 0 && timeline.length > 1) {
+        timeline.pop();
+      }
+      
+      // Recalculate all statistics from scratch
+      recalculateStatsFromTimeline();
+      
+      // Exit undo mode and recheck match completion
+      setUndoMode(false);
+      
+      // After undo, check if innings/match is still complete
+      const maxBalls = matchTotalOvers * 6;
+      const maxWickets = totalPlayers - 1;
+      
+      if (currentInnings === 1) {
+        // Check if first innings is still complete after undo
+        if (totalWickets >= maxWickets || balls >= maxBalls) {
+          setTimeout(() => {
+            setUndoMode(true);
+            setTimeout(() => {
+              if (undoModeActive) {
+                showEndInningsButton();
+              }
+            }, 500);
+          }, 100);
+        }
+      } else if (currentInnings === 2) {
+        // Check if second innings is still complete after undo
+        if (totalWickets >= maxWickets || balls >= targetOvers) {
+          matchCompleted = true;
+          setTimeout(() => {
+            setUndoMode(true);
+          }, 100);
+        }
+      }
+      
+      updateDisplay();
+      playSound(350, 100);
+      showMessage('Last delivery undone - match continues');
+    }
+
+    function showRareButtonsModal() {
+      if (!enforceMatchSetup()) return; // Check match setup first
+      document.getElementById('rareButtonsModal').classList.add('show');
+      playSound(400, 100);
+    }
+
+    function closeRareModal() {
+      document.getElementById('rareButtonsModal').classList.remove('show');
+    }
+
+    function addRunAndCloseRare(runs) {
+      addRun(runs);
+      closeRareModal();
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const soundIcon = document.getElementById('soundIcon');
+      const soundToggle = document.querySelector('.sound-toggle');
+      
+      if (soundEnabled) {
+        soundIcon.className = 'fas fa-volume-up';
+        soundToggle.classList.remove('muted');
+        // Initialize audio and play test sound
+        initAudio();
+        setTimeout(() => playSound(500, 100), 100);
+      } else {
+        soundIcon.className = 'fas fa-volume-mute';
+        soundToggle.classList.add('muted');
+      }
+      saveSoundPreference();
+    }
+
+    function toggleFullscreen() {
+      const fullscreenIcon = document.getElementById('fullscreenIcon');
+      
+      // Check for various fullscreen API methods (vendor prefixes)
+      const requestFullscreen = document.documentElement.requestFullscreen || 
+                               document.documentElement.webkitRequestFullscreen || 
+                               document.documentElement.mozRequestFullScreen || 
+                               document.documentElement.msRequestFullscreen;
+      
+      const exitFullscreen = document.exitFullscreen || 
+                             document.webkitExitFullscreen || 
+                             document.mozCancelFullScreen || 
+                             document.msExitFullscreen;
+      
+      const fullscreenElement = document.fullscreenElement || 
+                               document.webkitFullscreenElement || 
+                               document.mozFullScreenElement || 
+                               document.msFullscreenElement;
+      
+      // Check if fullscreen API is available
+      if (!requestFullscreen) {
+        // Fallback for devices that don't support fullscreen
+        showMessage('Fullscreen not supported on this device 📱');
+        playSound(300, 100);
+        return;
+      }
+      
+      if (!fullscreenElement) {
+        // Enter fullscreen
+        const element = document.documentElement;
+        
+        if (requestFullscreen) {
+          const promise = requestFullscreen.call(element);
+          
+          if (promise && promise.then) {
+            promise.then(() => {
+              fullscreenIcon.className = 'fas fa-compress';
+              showMessage('Entered fullscreen mode 📱');
+              playSound(600, 100);
+            }).catch(err => {
+              console.log('Error attempting to enable fullscreen:', err);
+              showMessage('Fullscreen failed - try using browser menu');
+              playSound(300, 100);
+            });
+          } else {
+            // For older browsers that don't return a promise
+            setTimeout(() => {
+              const newFullscreenElement = document.fullscreenElement || 
+                                          document.webkitFullscreenElement || 
+                                          document.mozFullScreenElement || 
+                                          document.msFullscreenElement;
+              if (newFullscreenElement) {
+                fullscreenIcon.className = 'fas fa-compress';
+                showMessage('Entered fullscreen mode 📱');
+                playSound(600, 100);
+              } else {
+                showMessage('Fullscreen failed - try using browser menu');
+                playSound(300, 100);
+              }
+            }, 100);
+          }
+        }
+      } else {
+        // Exit fullscreen
+        if (exitFullscreen) {
+          const promise = exitFullscreen.call(document);
+          
+          if (promise && promise.then) {
+            promise.then(() => {
+              fullscreenIcon.className = 'fas fa-expand';
+              showMessage('Exited fullscreen mode 🖥️');
+              playSound(400, 100);
+            }).catch(err => {
+              console.log('Error attempting to exit fullscreen:', err);
+              showMessage('Exit fullscreen failed');
+              playSound(300, 100);
+            });
+          } else {
+            // For older browsers that don't return a promise
+            setTimeout(() => {
+              const currentFullscreenElement = document.fullscreenElement || 
+                                             document.webkitFullscreenElement || 
+                                             document.mozFullScreenElement || 
+                                             document.msFullscreenElement;
+              if (!currentFullscreenElement) {
+                fullscreenIcon.className = 'fas fa-expand';
+                showMessage('Exited fullscreen mode 🖥️');
+                playSound(400, 100);
+              }
+            }, 100);
+          }
+        }
+      }
+    }
+
+    // Innings Management Functions
+    function toggleInnings() {
+      if (currentInnings === 1) {
+        // End 1st innings and start 2nd innings with current score as target
+        showInningsTransitionModal();
+      } else {
+        // End the match manually - directly show match completed popup
+        matchCompleted = true;
+        showMatchResult('', 'Match Completed', '');
+      }
+    }
+
+    function showInningsTransitionModal() {
+      const oversText = Math.floor(balls / 6) + '.' + (balls % 6);
+      const targetRuns = totalRuns + 1;
+      const targetOversText = Math.floor(matchTotalOvers) + '.' + 0;
+      
+      // Update modal content - remove casual text
+      document.getElementById('inningsTransitionText').textContent = 
+        `Ready for the next innings?`;
+      
+      // Update to scorecard format: 56/6 (6.2 overs)
+      document.getElementById('inningsScoreDetails').textContent = 
+        `${totalRuns}/${totalWickets} (${oversText} overs)`;
+      
+      // Remove the "Looks like a tricky target" message
+      document.getElementById('inningsTargetInfo').innerHTML = 
+        `<strong>Chase Target:</strong> ${targetRuns} runs in ${targetOversText} overs`;
+      
+      // Add smooth transition effect
+      const modal = document.getElementById('inningsTransitionModal');
+      modal.style.opacity = '0';
+      modal.style.transform = 'scale(0.8)';
+      modal.classList.add('show');
+      
+      // Animate in
+      setTimeout(() => {
+        modal.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        modal.style.opacity = '1';
+        modal.style.transform = 'scale(1)';
+      }, 50);
+      
+      playSound(400, 100);
+    }
+
+    function confirmInningsTransition() {
+      document.getElementById('inningsTransitionModal').classList.remove('show');
+      startSecondInnings();
+    }
+
+    function cancelInningsTransition() {
+      document.getElementById('inningsTransitionModal').classList.remove('show');
+    }
+
+    function startSecondInnings() {
+      // Record first innings data
+      firstInningsOvers = balls; // Store actual balls bowled in first innings
+      firstInningsStats = { 
+        ...stats,
+        totalRuns: totalRuns,
+        totalWickets: totalWickets
+      }; // Store first innings stats including runs and wickets
+      targetOvers = matchTotalOvers * 6; // Team 2 gets full allocated overs in balls
+      targetScore = totalRuns + 1;
+      currentInnings = 2;
+      
+      // Reset scorecard for 2nd innings
+      totalRuns = 0;
+      totalWickets = 0;
+      balls = 0;
+      timeline = [[]];
+      validDeliveries = 0;
+      stats = { boundaries: 0, fours: 0, sixes: 0, dotBalls: 0, ballsFaced: 0, extras: 0 };
+      
+      // IMPORTANT: Exit undo mode and enable all buttons for second innings
+      setUndoMode(false);
+      matchCompleted = false;
+      undoModeActive = false;
+      
+      // Update UI
+      document.getElementById('inningsBtn').textContent = 'End Match';
+      document.getElementById('inningsBtn').style.background = 'var(--gradient-success)';
+      
+      updateDisplay();
+      const oversText = Math.floor(targetOvers / 6) + '.' + (targetOvers % 6);
+      showMessage(`� Let's chase! Need ${targetScore} runs in ${oversText} overs. Good luck! 🍀`);
+      playSound(600, 150);
+    }
+
+    function resetToFirstInnings() {
+      currentInnings = 1;
+      targetScore = 0;
+      targetOvers = 0;
+      firstInningsOvers = 0;
+      firstInningsStats = null; // Clear stored first innings stats
+      totalRuns = 0;
+      totalWickets = 0;
+      balls = 0;
+      timeline = [[]];
+      validDeliveries = 0;
+      stats = { boundaries: 0, fours: 0, sixes: 0, dotBalls: 0, ballsFaced: 0, extras: 0 };
+      
+      // IMPORTANT: Clear undo mode and match completion state
+      setUndoMode(false);
+      matchCompleted = false;
+      undoModeActive = false;
+      
+      document.getElementById('inningsBtn').textContent = 'End 1st Innings';
+      document.getElementById('inningsBtn').style.background = '';
+      
+      updateDisplay();
+      showMessage('🏏 Reset to 1st innings');
+      playSound(400, 100);
+    }
+
+    // Match Result Functions
+    function showMatchResult(result, title, details) {
+      const modal = document.getElementById('matchResultModal');
+      const titleElement = document.getElementById('matchResultTitle');
+      const subtitleElement = document.getElementById('matchResultSubtitle');
+      const detailsElement = document.getElementById('matchResultDetails');
+      const statsElement = document.getElementById('matchResultStats');
+      
+      // Set the main title
+      titleElement.textContent = title || 'Match Completed';
+      titleElement.style.color = 'var(--primary)';
+      
+      if (result === 'chased') {
+        subtitleElement.innerHTML = '🎯<br>Successfully Chased!';
+        subtitleElement.style.color = 'var(--success)';
+        celebrateSix(); // Trigger celebration animation
+      } else if (result === 'defended') {
+        subtitleElement.innerHTML = '🛡️<br>Successfully Defended!';
+        subtitleElement.style.color = 'var(--success)';
+        celebrateFour(); // Trigger celebration animation
+      } else if (result === 'tied') {
+        subtitleElement.innerHTML = '🤝<br>Match Tied!';
+        subtitleElement.style.color = 'var(--warning)';
+        playSound(500, 300); // Different sound for tie
+      } else {
+        // Fallback for old calls
+        subtitleElement.textContent = '🏏 Match Over';
+        subtitleElement.style.color = 'var(--text-primary)';
+        playSound(400, 200);
+      }
+      
+      // Don't show the details text anymore
+      detailsElement.textContent = '';
+      
+      // Enhanced match statistics with comprehensive summary
+      const finalOvers = Math.floor(balls / 6) + '.' + (balls % 6);
+      const finalScore = `${totalRuns}/${totalWickets}`;
+      const runRate = balls > 0 ? (totalRuns / (balls / 6)).toFixed(2) : '0.00';
+      
+      // Calculate first innings summary if in second innings
+      let firstInningsData = '';
+      if (currentInnings === 2) {
+        const firstInningsOversText = Math.floor(firstInningsOvers / 6) + '.' + (firstInningsOvers % 6);
+        const firstInningsScore = targetScore - 1; // Target minus 1 to get first innings score
+        const firstInningsWickets = firstInningsStats ? firstInningsStats.totalWickets : 0; // Use actual wickets
+        const firstInningsRunRate = firstInningsOvers > 0 ? 
+          ((firstInningsScore / (firstInningsOvers / 6)).toFixed(2)) : '0.00';
+        
+        firstInningsData = `
+          <div style="margin: 8px 0; padding: 8px; background: var(--surface-tertiary); border-radius: 8px;">
+            <strong>📊 Match Summary</strong><br>
+            <span style="font-size: 12px; color: var(--text-secondary);">
+              1st Innings: ${firstInningsScore}/${firstInningsWickets} (${firstInningsOversText} overs)<br>
+              2nd Innings: ${finalScore} (${finalOvers} overs)
+            </span>
+          </div>
+        `;
+      }
+      
+      // Performance stats
+      const boundaries = stats.boundaries || 0;
+      const dotBalls = stats.dotBalls || 0;
+      const ballsFaced = stats.ballsFaced || balls;
+      const strikeRate = ballsFaced > 0 ? ((totalRuns / ballsFaced) * 100).toFixed(1) : '0.0';
+      
+      // Margin calculation for completed matches
+      let marginText = '';
+      if (currentInnings === 2) {
+        if (result === 'chased') {
+          const wicketsLeft = (totalPlayers - 1) - totalWickets;
+          const ballsLeft = targetOvers - balls;
+          const oversLeft = Math.floor(ballsLeft / 6) + '.' + (ballsLeft % 6);
+          marginText = `<div style="color: var(--success); font-weight: 600; margin-bottom: 8px;">Won by ${wicketsLeft} wicket${wicketsLeft !== 1 ? 's' : ''} with ${oversLeft} overs remaining</div>`;
+        } else if (result === 'defended') {
+          const runsNeeded = targetScore - totalRuns;
+          marginText = `<div style="color: var(--success); font-weight: 600; margin-bottom: 8px;">Won by ${runsNeeded} run${runsNeeded !== 1 ? 's' : ''}</div>`;
+        } else if (result === 'tied') {
+          marginText = `<div style="color: var(--warning); font-weight: 600; margin-bottom: 8px;">Match tied - both teams scored ${totalRuns} runs</div>`;
+        }
+      }
+      
+      statsElement.innerHTML = `
+        ${firstInningsData}
+      `;
+      
+      modal.classList.add('show');
+    }
+
+    function closeMatchResult() {
+      document.getElementById('matchResultModal').classList.remove('show');
+      setUndoMode(true); // Activate undo mode after match completion
+    }
+
+    function startNewMatch() {
+      // Set a flag to indicate this is a new match (not a refresh)
+      sessionStorage.setItem('isNewMatch', 'true');
+      // Open a new tab with the same scorecard page for a fresh match
+      window.open(window.location.href, '_blank');
+    }
+
+    function showDetailedSummary() {
+      // Generate detailed match statistics
+      const finalOvers = Math.floor(balls / 6) + '.' + (balls % 6);
+      const finalScore = `${totalRuns}/${totalWickets}`;
+      const runRate = balls > 0 ? (totalRuns / (balls / 6)).toFixed(2) : '0.00';
+      const fours = stats.fours || 0;
+      const sixes = stats.sixes || 0;
+      const dotBalls = stats.dotBalls || 0;
+      const extras = stats.extras || 0;
+      
+      let summaryText = ``;
+      
+      if (currentInnings === 2) {
+        // Second innings - show both innings
+        const firstInningsOversText = Math.floor(firstInningsOvers / 6) + '.' + (firstInningsOvers % 6);
+        const firstInningsScore = firstInningsStats ? firstInningsStats.totalRuns : 0;
+        const firstInningsWickets = firstInningsStats ? firstInningsStats.totalWickets : 0;
+        const firstInningsRunRate = firstInningsOvers > 0 ? 
+          ((firstInningsScore / (firstInningsOvers / 6)).toFixed(2)) : '0.00';
+        
+        // Get first innings detailed stats
+        const firstFours = firstInningsStats ? (firstInningsStats.fours || 0) : 0;
+        const firstSixes = firstInningsStats ? (firstInningsStats.sixes || 0) : 0;
+        const firstDots = firstInningsStats ? (firstInningsStats.dotBalls || 0) : 0;
+        const firstExtras = firstInningsStats ? (firstInningsStats.extras || 0) : 0;
+        
+        summaryText += `🏏 FIRST INNINGS:\n`;
+        summaryText += `Score: ${firstInningsScore}/${firstInningsWickets}\n`;
+        summaryText += `Overs: ${firstInningsOversText}\n`;
+        summaryText += `Run Rate: ${firstInningsRunRate}\n`;
+        summaryText += `4s: ${firstFours}  6s: ${firstSixes}  Dots: ${firstDots}  Extras: ${firstExtras}\n\n`;
+        
+        summaryText += `🏏 SECOND INNINGS:\n`;
+        summaryText += `Score: ${finalScore}\n`;
+        summaryText += `Overs: ${finalOvers}\n`;
+        summaryText += `Run Rate: ${runRate}\n`;
+        summaryText += `4s: ${fours}  6s: ${sixes}  Dots: ${dotBalls}  Extras: ${extras}\n\n`;
+        
+        // Match result details without margin
+        if (totalRuns >= targetScore) {
+          summaryText += `🎉 RESULT: Target chased successfully!\n`;
+        } else if (totalRuns === targetScore - 1) {
+          summaryText += `🤝 RESULT: Match Tied!\n`;
+          summaryText += `Both teams scored ${totalRuns} runs\n`;
+        } else {
+          summaryText += `🛡️ RESULT: Target defended!\n`;
+        }
+      } else {
+        // First innings only
+        summaryText += `🏏 INNINGS SUMMARY:\n`;
+        summaryText += `Score: ${finalScore}\n`;
+        summaryText += `Overs: ${finalOvers}\n`;
+        summaryText += `Run Rate: ${runRate}\n`;
+        summaryText += `4s: ${fours}  6s: ${sixes}  Dots: ${dotBalls}  Extras: ${extras}\n`;
+      }
+      
+      // Show in custom modal instead of alert
+      document.getElementById('detailedSummaryContent').textContent = summaryText;
+      document.getElementById('detailedSummaryModal').classList.add('show');
+      playSound(400, 100);
+    }
+
+    function closeDetailedSummary() {
+      document.getElementById('detailedSummaryModal').classList.remove('show');
+    }
+
+    function saveDetailedSummaryScreenshot() {
+      // Create a temporary container for the screenshot
+      const tempContainer = document.createElement('div');
+      tempContainer.style.cssText = `
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        background: white;
+        padding: 20px;
+        font-family: monospace;
+        font-size: 14px;
+        line-height: 1.4;
+        color: #333;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        width: 500px;
+        min-height: 300px;
+      `;
+      
+      // Get the detailed summary content
+      const summaryContent = document.getElementById('detailedSummaryContent').textContent;
+      
+      // Add title
+      const title = document.createElement('div');
+      title.style.cssText = `
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        text-align: center;
+        color: #1e40af;
+        padding: 10px 0;
+      `;
+      title.textContent = 'DETAILED MATCH SUMMARY';
+      
+      // Add content
+      const content = document.createElement('pre');
+      content.style.cssText = `
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 14px;
+        line-height: 1.4;
+        color: #333;
+        margin: 0;
+        padding: 0;
+      `;
+      content.textContent = summaryContent;
+      
+      tempContainer.appendChild(title);
+      tempContainer.appendChild(content);
+      
+      // Add to document temporarily
+      document.body.appendChild(tempContainer);
+      
+      // Use html2canvas to capture the screenshot
+      if (typeof html2canvas !== 'undefined') {
+        // Wait a bit for the element to be rendered
+        setTimeout(() => {
+          html2canvas(tempContainer, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            allowTaint: false,
+            logging: false,
+            width: tempContainer.offsetWidth,
+            height: tempContainer.offsetHeight
+          }).then(canvas => {
+            // Verify canvas has content
+            if (canvas.width > 0 && canvas.height > 0) {
+              // Create download link
+              const link = document.createElement('a');
+              link.download = `cricket-summary-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.jpg`;
+              link.href = canvas.toDataURL('image/jpeg', 0.9);
+              link.click();
+              
+              showMessage('📸 Screenshot saved successfully!');
+              playSound(600, 150);
+            } else {
+              showMessage('❌ Screenshot failed - empty canvas');
+              playSound(300, 100);
+            }
+            
+            // Remove temporary container
+            document.body.removeChild(tempContainer);
+          }).catch(error => {
+            console.error('Screenshot failed:', error);
+            document.body.removeChild(tempContainer);
+            showMessage('❌ Screenshot failed. Please try again.');
+            playSound(300, 100);
+          });
+        }, 200);
+      } else {
+        // Fallback: Use browser's built-in screenshot API if available
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+          showMessage('📸 Please use browser screenshot or install html2canvas library');
+        } else {
+          showMessage('❌ Screenshot not supported in this browser');
+        }
+        document.body.removeChild(tempContainer);
+        playSound(300, 100);
+      }
+    }
+
+    // Initialize audio context on first user interaction (required for mobile)
+    function handleFirstInteraction() {
+      initAudio();
+      // Remove the event listeners after first interaction
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    }
+
+    // Add event listeners for first user interaction
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true });
+    document.addEventListener('click', handleFirstInteraction, { once: true });
+    document.addEventListener('keydown', handleFirstInteraction, { once: true });
+
+    // Touch gestures for mobile
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    document.addEventListener('touchstart', function(event) {
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+    });
+
+    document.addEventListener('touchend', function(event) {
+      const touchEndX = event.changedTouches[0].clientX;
+      const touchEndY = event.changedTouches[0].clientY;
+      const diffX = touchStartX - touchEndX;
+      const diffY = touchStartY - touchEndY;
+      
+      // Swipe gestures
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+        if (diffX > 0) {
+          // Swipe left - undo
+          undoLast();
+        }
+      }
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('runModal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeModal();
+      }
+    });
+
+    // Close rare buttons modal when clicking outside
+    document.getElementById('rareButtonsModal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeRareModal();
+      }
+    });
+
+    // Close out modal when clicking outside
+    document.getElementById('outModal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeOutModal();
+      }
+    });
+
+    // Close run out modal when clicking outside
+    document.getElementById('runOutModal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeRunOutModal();
+      }
+    });
+
+    // Close restore modal when clicking outside
+    document.getElementById('restoreModal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeRestoreModal();
+      }
+    });
+
+    // Close match result modal when clicking outside
+    document.getElementById('matchResultModal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeMatchResult();
+      }
+    });
+
+    // Close innings transition modal when clicking outside
+    document.getElementById('inningsTransitionModal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        cancelInningsTransition();
+      }
+    });
+
+    // Close detailed summary modal when clicking outside
+    document.getElementById('detailedSummaryModal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeDetailedSummary();
+      }
+    });
+
+    // Initialize theme and sound
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const toggle = document.querySelector('.theme-switch input');
+      toggle.checked = savedTheme === 'dark';
+    }
+
+    function initSound() {
+      const savedSound = localStorage.getItem('soundEnabled');
+      if (savedSound !== null) {
+        soundEnabled = savedSound === 'true';
+        const soundIcon = document.getElementById('soundIcon');
+        const soundToggle = document.querySelector('.sound-toggle');
+        
+        if (!soundEnabled) {
+          soundIcon.className = 'fas fa-volume-mute';
+          soundToggle.classList.add('muted');
+        }
+      }
+    }
+
+    // Save sound preference
+    function saveSoundPreference() {
+      localStorage.setItem('soundEnabled', soundEnabled.toString());
+    }
+
+    // Auto-save functionality
+    function saveGameState() {
+      const gameState = {
+        totalRuns,
+        totalWickets,
+        balls,
+        timeline,
+        validDeliveries,
+        stats,
+        firstInningsStats,
+        currentInnings,
+        targetScore,
+        targetOvers,
+        firstInningsOvers,
+        matchTotalOvers,
+        matchSetupDone,
+        totalPlayers,
+        matchCompleted,
+        undoModeActive,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('cricketGameState', JSON.stringify(gameState));
+    }
+
+    function loadGameState() {
+      // Check if this is a page refresh or fresh visit
+      const isRefresh = sessionStorage.getItem('hasVisitedBefore');
+      
+      if (!isRefresh) {
+        // First visit - set the flag and don't show restore modal
+        sessionStorage.setItem('hasVisitedBefore', 'true');
+        return;
+      }
+      
+      // This is a refresh - check for saved game state
+      const saved = localStorage.getItem('cricketGameState');
+      if (saved) {
+        try {
+          const gameState = JSON.parse(saved);
+          const hoursSinceLastSave = (Date.now() - gameState.timestamp) / (1000 * 60 * 60);
+          
+          // Check if this is a new match (not a refresh)
+          const isNewMatch = sessionStorage.getItem('isNewMatch');
+          if (isNewMatch === 'true') {
+            // Clear the flag and don't show restore modal for new matches
+            sessionStorage.removeItem('isNewMatch');
+            return;
+          }
+          
+          // Only restore if less than 24 hours old
+          if (hoursSinceLastSave < 24) {
+            // Show custom restore modal
+            document.getElementById('restoreModal').classList.add('show');
+            playSound(400, 100);
+            return;
+          }
+        } catch (e) {
+          console.log('Could not restore game state');
+        }
+      }
+    }
+
+    function resumeScorecard() {
+      const saved = localStorage.getItem('cricketGameState');
+      if (saved) {
+        try {
+          const gameState = JSON.parse(saved);
+          totalRuns = gameState.totalRuns || 0;
+          totalWickets = gameState.totalWickets || 0;
+          balls = gameState.balls || 0;
+          timeline = gameState.timeline || [[]];
+          validDeliveries = gameState.validDeliveries || 0;
+          stats = gameState.stats || { boundaries: 0, fours: 0, sixes: 0, dotBalls: 0, ballsFaced: 0, extras: 0 };
+          firstInningsStats = gameState.firstInningsStats || null;
+          currentInnings = gameState.currentInnings || 1;
+          targetScore = gameState.targetScore || 0;
+          targetOvers = gameState.targetOvers || 0;
+          firstInningsOvers = gameState.firstInningsOvers || 0;
+          matchTotalOvers = gameState.matchTotalOvers || 20;
+          matchSetupDone = gameState.matchSetupDone || false;
+          totalPlayers = gameState.totalPlayers || 11;
+          matchCompleted = gameState.matchCompleted || false;
+          undoModeActive = gameState.undoModeActive || false;
+          
+          // Update innings button
+          if (currentInnings === 2) {
+            document.getElementById('inningsBtn').textContent = 'End Match';
+            document.getElementById('inningsBtn').style.background = 'var(--gradient-success)';
+          } else {
+            document.getElementById('inningsBtn').textContent = 'End 1st Innings';
+          }
+          
+          updateDisplay();
+          showMessage('Current scorecard resumed!');
+        } catch (e) {
+          console.log('Could not restore game state');
+        }
+      }
+      closeRestoreModal();
+    }
+
+    function startNewScorecard() {
+      // Clear saved state and start fresh
+      localStorage.removeItem('cricketGameState');
+      showMessage('Starting new scorecard!');
+      closeRestoreModal();
+    }
+
+    function closeRestoreModal() {
+      document.getElementById('restoreModal').classList.remove('show');
+    }
+
+    // Auto-save every action
+    function autoSave() {
+      setTimeout(saveGameState, 100);
+    }
+
+    // Override functions to include auto-save
+    const originalRecordDelivery = recordDelivery;
+    recordDelivery = function(...args) {
+      originalRecordDelivery.apply(this, args);
+      autoSave();
+    };
+
+    const originalToggleSound = toggleSound;
+    toggleSound = function() {
+      originalToggleSound();
+      saveSoundPreference();
+    };
+
+    // Initialize everything
+    initTheme();
+    initSound();
+    updateDisplay();
+    
+    // Handle fullscreen change events with vendor prefixes
+    function handleFullscreenChange() {
+      const fullscreenIcon = document.getElementById('fullscreenIcon');
+      const fullscreenElement = document.fullscreenElement || 
+                               document.webkitFullscreenElement || 
+                               document.mozFullScreenElement || 
+                               document.msFullscreenElement;
+      
+      if (fullscreenElement) {
+        fullscreenIcon.className = 'fas fa-compress';
+      } else {
+        fullscreenIcon.className = 'fas fa-expand';
+      }
+    }
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    
+    // Load previous game state after a short delay
+    setTimeout(loadGameState, 500);
+    
+    // Show welcome message
+    setTimeout(() => {
+      if (!matchSetupDone) {
+        showMessage('🏏 Welcome to Crickounter!\nClick the ⚙️ settings to set up your match first.');
+      }
+    }, 2000);
+
+    // Handle visibility change to save state
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        saveGameState();
+      }
+    });
+
+    // Handle beforeunload to save state
+    window.addEventListener('beforeunload', function() {
+      saveGameState();
+    });
+
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+      const matchSetupModal = document.getElementById('matchSetupModal');
+      const oversAdjustModal = document.getElementById('oversAdjustModal');
+      const settingsModal = document.getElementById('settingsModal');
+      
+      if (event.target === matchSetupModal) {
+        // Don't allow closing match setup modal by clicking outside if it's required
+        if (matchSetupDone) {
+          matchSetupModal.style.display = 'none';
+        }
+      }
+      
+      if (event.target === oversAdjustModal) {
+        cancelSettingsAdjustment();
+      }
+      
+      if (event.target === settingsModal) {
+        closeSettingsModal();
+      }
+    });
+  </script>
+</body>
+</html>
